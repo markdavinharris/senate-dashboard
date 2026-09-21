@@ -196,7 +196,111 @@ footer .fnote{color:#8FB8DC; font-size:12px; text-align:right; max-width:52ch; l
   footer .container{flex-direction:column; align-items:flex-start;}
   footer .fnote{text-align:left;}
 }
+
+/* ---------- Email capture gate ---------- */
+.cs-gate{
+  position:fixed; inset:0; z-index:9999; background:var(--cs-navy);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.cs-gate-card{
+  max-width:420px; width:100%; background:#fff; border-radius:var(--cs-radius);
+  padding:36px 32px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.35);
+}
+.cs-gate-eyebrow{
+  display:block; font-size:13px; font-weight:700; text-transform:uppercase;
+  letter-spacing:1.6px; color:var(--cs-sky); margin:0 0 10px;
+}
+.cs-gate-card h2{font-size:22px; line-height:1.25; margin:0 0 10px;}
+.cs-gate-card p{color:var(--cs-muted); font-size:14.5px; margin:0 0 22px; font-weight:500;}
+#csGateForm{display:flex; flex-direction:column; gap:12px;}
+#csGateEmail{
+  padding:12px 14px; border:1px solid var(--cs-rule); border-radius:6px;
+  font-family:var(--cs-font); font-size:15px; color:var(--cs-navy); width:100%;
+}
+#csGateEmail:focus{outline:2px solid var(--cs-sky); border-color:var(--cs-sky);}
+#csGateForm button{
+  padding:12px 14px; border:none; border-radius:6px; background:var(--cs-spark); color:#fff;
+  font-family:var(--cs-font); font-weight:700; font-size:15px; cursor:pointer;
+}
+#csGateForm button:hover{background:#e02a10;}
+#csGateForm button[disabled]{opacity:.6; cursor:default;}
+.cs-gate-error{color:var(--cs-critical); font-size:13px; margin-top:-2px; text-align:left;}
+.cs-gate-fineprint{font-size:11.5px; color:var(--cs-muted); margin-top:18px; line-height:1.5;}
+body.cs-gated{overflow:hidden;}
 </style>
+
+<div id="csGate" class="cs-gate">
+  <div class="cs-gate-card">
+    <span class="cs-gate-eyebrow">ColdSpark</span>
+    <h2>2026 Senate Battleground Monitor</h2>
+    <p>Enter your email to view the live dashboard.</p>
+    <form id="csGateForm" autocomplete="off" novalidate>
+      <input type="email" id="csGateEmail" placeholder="you@example.com" required>
+      <div class="cs-gate-error" id="csGateError" style="display:none">Please enter a valid email address.</div>
+      <button type="submit">View Dashboard</button>
+    </form>
+    <div class="cs-gate-fineprint">Your email is used only to track dashboard access and won't be shared.</div>
+  </div>
+</div>
+<script>
+(function(){
+  var STORAGE_KEY = 'csm_gate_email_2026';
+  var FORM_ID = '1FAIpQLSeYfzRRwkuVvXUGv4mLtfyTzBP0zypmoh6tAPYNLpo88DHR8A';
+  var ENTRY_ID = 'entry.1263431125';
+  var gate = document.getElementById('csGate');
+  var form = document.getElementById('csGateForm');
+  var emailInput = document.getElementById('csGateEmail');
+  var errorEl = document.getElementById('csGateError');
+
+  function logView(email){
+    try {
+      var body = new URLSearchParams();
+      body.append(ENTRY_ID, email);
+      fetch('https://docs.google.com/forms/d/e/' + FORM_ID + '/formResponse', {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        body: body.toString()
+      });
+    } catch (e) {}
+  }
+
+  function hideGate(){
+    if (gate) gate.style.display = 'none';
+    document.body.classList.remove('cs-gated');
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+
+  if (saved) {
+    hideGate();
+    logView(saved);
+  } else {
+    document.body.classList.add('cs-gated');
+  }
+
+  if (form) {
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      var email = (emailInput.value || '').trim();
+      var isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!isValid) {
+        errorEl.style.display = 'block';
+        return;
+      }
+      errorEl.style.display = 'none';
+      var btn = form.querySelector('button');
+      if (btn) { btn.disabled = true; btn.textContent = 'Loading…'; }
+
+      logView(email);
+
+      try { localStorage.setItem(STORAGE_KEY, email); } catch(err) {}
+      hideGate();
+    });
+  }
+})();
+</script>
 
 <header class="hero">
   <div class="container">
