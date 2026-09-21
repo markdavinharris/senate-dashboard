@@ -152,6 +152,14 @@ header.hero .container{position:relative;}
 .margin-badge.d .dot{background:var(--cs-dem);}
 .margin-badge.r .dot{background:var(--cs-rep);}
 .src{font-size:11px; color:var(--cs-muted); line-height:1.45; margin-top:6px;}
+.src-toggle{
+  display:inline-block; margin-top:8px; font-size:11.5px; font-weight:700; color:var(--cs-sky);
+  cursor:pointer; text-decoration:underline; text-underline-offset:2px; background:none; border:none;
+  padding:0; font-family:var(--cs-font);
+}
+.src-toggle:hover{color:var(--cs-blue-500);}
+.src--collapsible{display:none; margin-top:8px;}
+.src--collapsible.is-open{display:block;}
 
 .hr{height:1px; background:var(--cs-mist); border:0; margin:16px 0;}
 
@@ -632,7 +640,7 @@ const RACES = [
 
 function pct(n){ return n.toFixed(n % 1 === 0 ? 0 : 1); }
 
-function raceCard(r){
+function raceCard(r, i){
   const und = Math.max(0, 100 - r.pollR - r.pollD);
   const marginClass = r.marginParty; // 'd' or 'r'
   return `
@@ -696,12 +704,19 @@ function raceCard(r){
         <div style="flex-basis:${pct(r.spendRVal/(r.spendRVal+r.spendDVal)*100)}%;background:var(--cs-rep)"><span class="seg-label">${pct(r.spendRVal/(r.spendRVal+r.spendDVal)*100)}%</span></div>
         <div style="flex-basis:${pct(r.spendDVal/(r.spendRVal+r.spendDVal)*100)}%;background:var(--cs-dem)"><span class="seg-label">${pct(r.spendDVal/(r.spendRVal+r.spendDVal)*100)}%</span></div>
       </div>
-      <div class="src" style="margin-top:8px">${r.spendSrc}</div>
+      <button type="button" class="src-toggle" onclick="toggleSrc(this,'spend-src-${i}')">Show sourcing detail</button>
+      <div class="src src--collapsible" id="spend-src-${i}">${r.spendSrc}</div>
     </div>
   `;
 }
 
-document.getElementById('racegrid').innerHTML = RACES.map(raceCard).join('');
+function toggleSrc(btn, id){
+  const el = document.getElementById(id);
+  const open = el.classList.toggle('is-open');
+  btn.textContent = open ? 'Hide sourcing detail' : 'Show sourcing detail';
+}
+
+document.getElementById('racegrid').innerHTML = RACES.map((r,i)=>raceCard(r,i)).join('');
 
 // Stat band, computed from the data above
 const totalTracked = RACES.reduce((s,r)=>s+r.tracked,0);
