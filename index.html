@@ -198,6 +198,25 @@ footer .fnote{color:#8FB8DC; font-size:12px; text-align:right; max-width:52ch; l
   transition:opacity .1s ease; transform:translate(-50%,-100%);
 }
 
+
+/* ---------- Senate control (betting markets) ---------- */
+.control{background:var(--cs-haze); border-bottom:1px solid var(--cs-mist);}
+.control .container{padding:26px 24px 22px;}
+.control-head{display:flex; justify-content:space-between; align-items:baseline; gap:16px; flex-wrap:wrap; margin-bottom:14px;}
+.control-head h2{font-size:22px;}
+.control-head .sub{font-size:13px; color:var(--cs-muted);}
+.control-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+.ctl-card{background:#fff; border:1px solid var(--cs-mist); border-radius:var(--cs-radius); padding:16px 18px 14px;}
+.ctl-top{display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px;}
+.ctl-name{font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--cs-navy);}
+.ctl-vol{font-size:11.5px; color:var(--cs-muted);}
+.ctl-nums{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px; font-variant-numeric:tabular-nums;}
+.ctl-nums .d,.ctl-nums .r{font-size:26px; font-weight:700; line-height:1.1;}
+.ctl-nums .d{color:var(--cs-dem);} .ctl-nums .r{color:var(--cs-spark); text-align:right;}
+.ctl-nums small{display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--cs-muted);}
+.ctl-note{font-size:12px; color:var(--cs-muted); margin-top:12px; line-height:1.55;}
+@media (max-width:768px){ .control-grid{grid-template-columns:1fr;} }
+
 /* ---------- Responsive ---------- */
 @media (max-width:992px){
   .race-grid{grid-template-columns:repeat(2,1fr);}
@@ -334,6 +353,17 @@ body.cs-gated{overflow:hidden;}
     </div>
   </div>
 </header>
+
+<div class="control">
+  <div class="container">
+    <div class="control-head">
+      <div><span class="eyebrow" style="color:var(--cs-blue-500); margin-bottom:4px">Betting Markets</span><h2>Who controls the Senate after November?</h2></div>
+      <span class="sub" id="ctlSub"></span>
+    </div>
+    <div class="control-grid" id="ctlGrid"></div>
+    <p class="ctl-note" id="ctlNote"></p>
+  </div>
+</div>
 
 <div id="mapTooltip" class="map-tooltip" role="tooltip" aria-hidden="true"></div>
 
@@ -529,6 +559,17 @@ body.cs-gated{overflow:hidden;}
 </footer>
 
 <script>
+// Overall Senate control — prediction markets (refresh with each update)
+const CONTROL = {
+  asOf: "Oct 18, 2026",
+  markets: [
+    {name:"Polymarket", d:65, r:37, vol:"$7.12M volume",
+     detail:"“Which party will win the Senate in 2026?” — midpoint prices (64.5¢ D / 36.5¢ R), rounded half up"},
+    {name:"Kalshi", d:63, r:38, vol:"$15.4M volume",
+     detail:"“Which party will win the U.S. Senate?” — bid/ask midpoints (62.5¢ D / 37.5¢ R), rounded half up"}
+  ],
+  note:"Republicans hold the Senate 53–47, so Democrats need a net gain of four seats for a 51-seat majority (a 50–50 split stays Republican on Vice President Vance's tie-breaking vote). Polymarket's combined balance-of-power market ($24.8M volume) prices a Democratic sweep of both chambers at 63% and a Republican Senate with a Democratic House at 28%. Contract prices don't sum to exactly 100 because each is a separate market."
+};
 const RACES = [
   {
     state:"Alaska", seat:"Incumbent seeking reelection",
@@ -843,6 +884,24 @@ function toggleSrc(btn, id){
   const open = el.classList.toggle('is-open');
   btn.textContent = open ? 'Hide sourcing detail' : 'Show sourcing detail';
 }
+
+
+// Senate control band
+document.getElementById('ctlSub').textContent = 'Implied probability · as of ' + CONTROL.asOf;
+document.getElementById('ctlGrid').innerHTML = CONTROL.markets.map(m => `
+  <div class="ctl-card">
+    <div class="ctl-top"><span class="ctl-name">${m.name}</span><span class="ctl-vol">${m.vol}</span></div>
+    <div class="ctl-nums">
+      <div class="d"><small>Democrats</small>${m.d}%</div>
+      <div class="r"><small>Republicans</small>${m.r}%</div>
+    </div>
+    <div class="bar" role="img" aria-label="${m.name}: Democrats ${m.d}%, Republicans ${m.r}%">
+      <div style="flex-basis:${m.d}%;background:var(--cs-dem)"></div>
+      <div style="flex-basis:${m.r}%;background:var(--cs-rep)"></div>
+    </div>
+    <div class="src">${m.detail}</div>
+  </div>`).join('');
+document.getElementById('ctlNote').textContent = CONTROL.note;
 
 document.getElementById('racegrid').innerHTML = RACES.map((r,i)=>raceCard(r,i)).join('');
 
